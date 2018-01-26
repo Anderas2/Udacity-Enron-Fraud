@@ -11778,8 +11778,8 @@ div#notebook {
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h2 id="1.-Project-goal">1. Project goal<a class="anchor-link" href="#1.-Project-goal">&#182;</a></h2><p>My personal target in this project is to identify at least one more person than was in the official list of the Enron fraud investigation. I am well aware that statistical methods will not be sufficient as prove in a fraud case, so the name will not be published here by me - however, i am interested in how this very simple information like financial information and email network information as given here, can uncover connections.
-Out of personal interest, i also want to see how far I can come with non-Neural-Network methods. As long as there is no PCA used, the non-NN-methods frequently are able to give insight to which data points carry the greatest value.</p>
+<h2 id="1.-Project-goal">1. Project goal<a class="anchor-link" href="#1.-Project-goal">&#182;</a></h2><p>My personal target in this project is to identify at least one more person than was in the official list of the Enron fraud investigation. I am well aware that statistical methods will not be sufficient as prove in a fraud case, so the name will not be published - however, i am interested in how this very simple information like financial information and email network information as given here, can uncover connections.
+Out of personal interest, i also want to see how far I can come with non-Neural-Network methods. As long as there is no PCA used, the non-NN-methods frequently are able to give insight.</p>
 
 </div>
 </div>
@@ -11789,11 +11789,48 @@ Out of personal interest, i also want to see how far I can come with non-Neural-
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h2 id="Pre-Work:-Outlier-detection-and-data-assessment">Pre-Work: Outlier detection and data assessment<a class="anchor-link" href="#Pre-Work:-Outlier-detection-and-data-assessment">&#182;</a></h2><p>Outlier detection is the central goal of this project - any unusual salary would be "interesting". However, in the first phase, when checking the data for the first time, one point was really special:
+<h3 id="Some-remarks">Some remarks<a class="anchor-link" href="#Some-remarks">&#182;</a></h3><p>I am using Python 3.6</p>
+<p>I needed to change all print commands to include brackets, and more important, i needed to change the pickle dump() and read() functions to use rb instead of r and wb instead of w.</p>
+<p>Should the 2.7 version of Udacity not be able to execute, please try in Python 3.6 and use my modified tester function.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered">
+<div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="Data-investigation">Data investigation<a class="anchor-link" href="#Data-investigation">&#182;</a></h2><p>The code for the investigation can be found in 01_Data_investigation.py</p>
+<h3 id="outlier-detection">outlier detection<a class="anchor-link" href="#outlier-detection">&#182;</a></h3><p>Outlier detection is the central goal of this project - any unusual salary would be "interesting". However, in the first phase, when checking the data for the first time, one point was really special:
 <img src="Outlier detection.png">
 This picture was saved from the console during the investigation phase. Checking the data, the point to the top right was a "Total" that really shouldn't be in the dataset. It was removed.</p>
-<p>After, i assessed the available data in terms of completeness. It is worth noting that most of the features are quite sparse. As example, for the financial information, not everybody receives a bonus paid in shares; and probably not everybody of those persons has their shares bonus published. The same goes for most of the features, they are sparse. So i need every feature i can get.</p>
-<p>The sparseness especially in terms of people paid in shares is not necessarily a bad thing: it contains information in itself. For example people paid in shares: The Enron fraud case was mostly a case of investor scam: Paying oneself with shares, then bloating the shares value as much as possible, then selling rapidly before the bubble bursts.</p>
+<h3 id="other-data-properties">other data properties<a class="anchor-link" href="#other-data-properties">&#182;</a></h3><p>This is a very small dataset. We have a total of 145 rows. 18 of those are POI; so the dataset is highly unbalanced, too. 
+The data contains also a lot of sparsity. I did a count of NAN values:</p>
+
+<pre><code>print(data_df[data_df=="NaN"].count(axis=0))
+bonus                         64
+deferral_payments            107
+deferred_income               97
+director_fees                129
+email_address                 34
+exercised_stock_options       44
+expenses                      51
+from_messages                 59
+from_poi_to_this_person       59
+from_this_person_to_poi       59
+loan_advances                142
+long_term_incentive           80
+other                         53
+poi                            0
+restricted_stock              36
+restricted_stock_deferred    128
+salary                        51
+shared_receipt_with_poi       59
+to_messages                   59
+total_payments                21
+total_stock_value             20</code></pre>
+<p>Only one field has no NaN values. It is the one made manually by Katie, to have labels for the data: POI.</p>
 
 </div>
 </div>
@@ -11803,17 +11840,15 @@ This picture was saved from the console during the investigation phase. Checking
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h2 id="Feature-selection">Feature selection<a class="anchor-link" href="#Feature-selection">&#182;</a></h2><h4 id="how-did-i-pick-them">how did i pick them<a class="anchor-link" href="#how-did-i-pick-them">&#182;</a></h4><p>In a first attempt, i selected all financial information available (after all, why committing fraud if you have no interest doing so?); and relational information from the email data: Emails sent to and from POI; and emails sent to this person with an POI in copy (indicating probably that the sender thinks there is a relation)</p>
-<p>Next I made a correlation matrix, not with the label, but internally - to see if there is redundant data that could be combined or removed.</p>
-<p>The feature list contains all available features first; ordered by some topics:</p>
-<ul>
-<li>Line zero is the POI feature itself. Strong correlation here is wished for, to generate a strong indicator</li>
-<li>Number 1 to 8 are salary components,</li>
-<li>9 and 10 are deferred payments or incomes</li>
-<li>11 to 14 are a variety of stock options</li>
-<li>15 to 19 are email features.</li>
-</ul>
-<p>The detailed list is as follows:</p>
+<h2 id="2.-Feature-selection">2. Feature selection<a class="anchor-link" href="#2.-Feature-selection">&#182;</a></h2><h4 id="how-did-i-pick-them">how did i pick them<a class="anchor-link" href="#how-did-i-pick-them">&#182;</a></h4><p>The feature selection was the main part of the project - i did it all the way right up to the end. You will find three main "batches" of feature selection:</p>
+<ol>
+<li>In the first attempt, use them all and choose some algorithms.</li>
+<li>Then engineer my own features and see how the algorithms behave.</li>
+<li>Finally, combine the best of feature selection and algorithm selection for the result.</li>
+</ol>
+<p>In a first attempt, i selected all financial information available (after all, why committing fraud if you have no interest doing so?); and relational information from the email data: Emails sent to and from POI; and emails sent to this person with an POI in copy (indicating probably that the sender thinks there is a relation)</p>
+<p>Next I made a correlation matrix to see if there is redundant data that could be combined or removed.</p>
+<p>The detailed list is as follows</p>
 
 <pre><code>features_list = ['poi', 
     'salary', 'bonus', 'director_fees',  'expenses',
@@ -11830,12 +11865,24 @@ This picture was saved from the console during the investigation phase. Checking
 
 </code></pre>
 <p><img src="Correlation_matrix.png"></p>
-<p>It can be seen in the correlation matrix that nearly all features have a correlation to the poi feature, which is good. In first place, i would try and use them all. 
-However, the first three stock option features (excercised stock options, total stock value, restricted stock) are so deeply correlated that it may be interesting to remove some.</p>
-<p>The email features (last five lines) are also very much in line with each other.</p>
-<p>The problem that i have here is that only the features can move the circle, as shown below, more to the left. Model selection to it's finest can ultimately only make this circle bigger or smaller.
-<img src="Precisionrecall_svg.png">
-<a href="https://en.wikipedia.org/wiki/Precision_and_recall">taken from Wikipedia</a></p>
+<p>It can be seen in the correlation matrix that nearly all features have a correlation to the poi feature, which is good. 
+However, the first three stock option features (excercised stock options, total stock value, restricted stock) are so deeply correlated that it may be interesting to remove some.
+The email features (last five lines) are also very much in line with each other.</p>
+<h3 id="what-about-sparse-data">what about sparse data<a class="anchor-link" href="#what-about-sparse-data">&#182;</a></h3><p>Coming back to the sparsity problem: I was experimenting with leaving those features out of the estimator, but the results have not been better, so they stay in. I checked with the final algorithm selected in the last part of this project, if a removal of those data fields has an influence on the performance.</p>
+
+<pre><code>results for leaving some sparse data out
+All features, SVC: F1=0.488  # This is the winner
+w/o loan_advances, SVC: F1=0.487
+w/o restricted_stock_deferred, SVC: F1=0.479
+w/o director_fees, SVC: F1=0.481</code></pre>
+<p>So, sparse the data may be, but information it carries nevertheless. Inside the stack i leave them!</p>
+<p>Astonishingly, some of the not-so-sparse data contained less information. When i removed those three features from the stack, the algorithm performance actually boosted.</p>
+
+<pre><code>w/o 'exercised_stock_options', SVC: F1= 0.511
+w/o 'shared_receipt_with_poi', SVC: F1=0.515
+w/o 'to_messages', SVC: F1=0519</code></pre>
+<p>These are the features i finally removed from the list. Note, this final feature removal was done right at the end, after the algorithm was selected.</p>
+<p>Before selecting the final features, i did a first try with some models</p>
 
 </div>
 </div>
@@ -11845,7 +11892,7 @@ However, the first three stock option features (excercised stock options, total 
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h2 id="2.-Feature-Selection-and-3.-Model-selection">2. Feature Selection and 3. Model selection<a class="anchor-link" href="#2.-Feature-Selection-and-3.-Model-selection">&#182;</a></h2><p>I was testing AdaBoost, SVC, Random Forest Classifier and Decision Tree Classifier.
+<h2 id="3.-Model-selection">3. Model selection<a class="anchor-link" href="#3.-Model-selection">&#182;</a></h2><p>I was testing AdaBoost, SVC, Random Forest Classifier and Decision Tree Classifier.
 All four of them are good classifiers. Only the SVC needs some preprocessing, which is also nice: The more i can do with the original data, the less i am in danger of accidentally introducing a failure.</p>
 <p>From here i tried various strategies:</p>
 <ol>
@@ -11853,18 +11900,15 @@ All four of them are good classifiers. Only the SVC needs some preprocessing, wh
 <li>Generate additional random features and let PCA / KBest choose the best ones</li>
 <li>Choose from the features with PCA and KBest before applying the Algorithms</li>
 <li>Add only the best few of the additional random features, use PCA/KBest to choose</li>
-<li>Add only the best 3 of the additional random features, apply the algorithms like in point 1.</li>
-<li>Let a Decision Tree choose the most successful features, apply algorithms like in point 1.</li>
 <li>Evaluate all strategies and choose the best.</li>
 </ol>
 <p>After several unsuccessful tries, I changed my test set up so that it was <em>very</em> similar to the Udacity tester code, in order to yield good results there. I load the same deprecated StratifiedShuffleSplit function in order to be able to bring the folds up to a thousand in the end. During the experimentation phase, however, i kept the folds down to 10 for the calculation speed. As Udacity requires to optimize on Precision and Recall, i use the F1 score as metric for the evaluation.</p>
-<h4 id="F1-score-results-in-Step-1">F1 score results in Step 1<a class="anchor-link" href="#F1-score-results-in-Step-1">&#182;</a></h4><ul>
-<li>AdaBoost 0.25</li>
-<li>Decision Tree 0.24</li>
-<li>Random Forest 0.30</li>
-<li>SVC 0.42</li>
+<h4 id="F1-score-results-in-the-first-try">F1 score results in the first try<a class="anchor-link" href="#F1-score-results-in-the-first-try">&#182;</a></h4><ul>
+<li>AdaBoost F1: 0.25</li>
+<li>Decision Tree F1: 0.24</li>
+<li>Random Forest F1: 0.30</li>
+<li>SVC F1: 0.42</li>
 </ul>
-<p>I consider those results to be relatively poor, so I employed GridSearchCV to search for good parameters. The predefined StratifiedShuffleSplit was used as cv parameter of the GridSearch.</p>
 
 </div>
 </div>
@@ -11874,11 +11918,11 @@ All four of them are good classifiers. Only the SVC needs some preprocessing, wh
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h2 id="4.-Parameter-selection:-Turning-knobs">4. Parameter selection: Turning knobs<a class="anchor-link" href="#4.-Parameter-selection:-Turning-knobs">&#182;</a></h2><p>There are two kinds of hyperparameters: One has to be found by search, the other one by knowledge.
-One example for knowledge-based parameters is the class_weight. Three out of my used four models had a class_weight parameter that i set to "balanced" in order to equalize the imbalance in the test data. I would even include the choice of scaler into this category: SKLearn offers, like, tens of scalers. The SVC algorithm needs roughly gaussian input, so the standardScaler was the right choice here.</p>
-<p>Other parameters have to be searched. The number of estimators in random forest or Adaboost; or the C and Gamma values in the SVC are examples for this. 
-The principle of search was to refine the grid in three or four steps, until the algorithms were well adapted to the data, and equally important, to the scorer. This is the place where you can adapt the shape of your function to the needs of your scorer - if it will have a better accuracy or a better recall is decided here.</p>
-<p>As an example for the SVC:</p>
+<h2 id="4.-Parameter-selection:-Turning-knobs">4. Parameter selection: Turning knobs<a class="anchor-link" href="#4.-Parameter-selection:-Turning-knobs">&#182;</a></h2><p>There are two kinds of hyperparameters: One has to be found by search, the other one by knowledge. One example for knowledge-based parameters is the class_weight. Three out of my four models had a class_weight parameter that i set to "balanced" in order to equalize the imbalance in the training data. I would even include the choice of scaler into this category: SKLearn offers, like, tens of scalers. The SVC and PCA algorithms both need roughly gaussian input, so the standardScaler was the right choice here.</p>
+<p>Other parameters have to be searched. The number of estimators in random forest or Adaboost; or the C and Gamma values in the SVC are examples for this. The principle of search was to refine the grid in three or four steps, until the algorithms were well adapted to the data, and equally important, to the scorer. This is the only place where you can adapt the shape of your function to the needs of your scorer - if it will have a better accuracy or a better recall is decided here.
+If this step is done wrong, we have an overfit estimator that won't give me any prediction.</p>
+<p>Example: If i optimized the SVC on accuracy here, it would be like 90% accurate by just ignoring that there are POI's. It is for this very reason that i use the F1 score all along the code to fit the estimators.</p>
+<p>In detail, an example for one value of the SVC:</p>
 <p>First step</p>
 
 <pre><code>{'C' : [1, 2, 5, 1e1, 2e1, 5e1, 1e2, 2e2, 5e2,
@@ -11891,13 +11935,14 @@ The principle of search was to refine the grid in three or four steps, until the
 <pre><code>{'C' : [550, 580, 600, 620, 640]}</code></pre>
 <p>Chosen: 620 --&gt; And stop.</p>
 <p>I was thinking that this "turning knobs" step would be repetitive for every machine learning task and wondered that there is no "hyperfit" function in SKlearn.</p>
-<h4 id="F1-score-for-different-kernels-of-svc">F1 score for different kernels of svc<a class="anchor-link" href="#F1-score-for-different-kernels-of-svc">&#182;</a></h4><ul>
+<h4 id="F1-score-for-different-kernels-of-svc">F1 score for different kernels of svc<a class="anchor-link" href="#F1-score-for-different-kernels-of-svc">&#182;</a></h4><p>What's more, the SVC algorithm comes with different "kernels"; that are nearly algorithms on their own, really. I tried them all with the above mentioned grid and found that the sigmoid function was superior to the others.</p>
+<ul>
 <li>RBF 0.42</li>
 <li>Sigmoid 0.64</li>
 <li>linear - no solution</li>
 <li>poly (grade 3) 0.25</li>
 </ul>
-<p>The (internally found) F1 score for the sigmoid function looked extremely promising with 0.64 - The udacity tester code agreed by showing a precision of 0.33 and a recall of 0.73.</p>
+<p>After the sigmoid variant proved to be so superior, the values for C and gamma were refined by a variant of successive approximation (done manually). The F1 score looked extremely promising with 0.64 - The udacity tester code agreed by showing a precision of 0.33 and a recall of 0.73.</p>
 
 </div>
 </div>
@@ -11913,17 +11958,17 @@ The principle of search was to refine the grid in three or four steps, until the
 <li>generate loads of random features and choose the best with some kind of algorithm - Lasso, KBest, PCA</li>
 <li>avoid feature engineering and use neural networks instead. </li>
 </ul>
-<p>Neural networks are not yet an option for me, and I have no insider knowledge about Enron at all.
-So I will try some experimental random feature engineering here; then I employ KBest and PCA to define a cut-off, and then I let myself be surprised by the (hopefully) one or two valuable new features that I find in the mass. Another expectation is to see; through higher dimensionality, better separated grouping.</p>
+<p>Neural networks are not yet an option for me, and i have no insider knowledge about Enron at all.
+So i will try some experimental random feature engineering here; then I employ KBest and PCA to define a cut-off, and then i let myself be surprised by the (hopefully) one or two valuable new features that i find in the mass. Another expectation is to see; through higher dimensionality, better separated grouping.</p>
 <p>One drawback is that too many dimensions compared to data rows can easily break the algorithms;</p>
-<p>a second drawback is that if you generate calculated features from sparse data, the result is a lot more sparse.</p>
+<p>a second drawback that really gave me a bad feeling about this is that if you generate calculated features from sparse data, the result is a lot more sparse. That is especially true for division features, which is sad as a number divided by another one usually depicts a percentage, and those are often helpful.</p>
 <p>Nevertheless, i wanted to try this experiment, so here is what I did:</p>
 <p>I multiplied every column with every column. 
 I subtracted every column from every column. 
 I divided every column by every column. 
-The resulting 1200 features  were fed into SelectKBest with the f_classif algorithm; and they were also scaled and put into a PCA.</p>
+The resulting 1200 features  were fed into SelectKBest with the f_classif algorithm; and they were scaled and put into a PCA.</p>
 <p>I trained the four Algorithms of above, in a for-loop, on anything between 1 and 100 features coming out of the two feature selection methods. 
-I expected some kind of e-curve approximation getting either slowly better or slowly worse, and so was I quite surprised to see no steady decline or rise in my f1-value, but a quite wild zig-zag; and a nearly unreadable graphic in the end.</p>
+I expected some kind of e-curve approximation, and so was I quite surprised to see no steady decline or rise in my f1-value, but a quite wild zig-zag; and a nearly unreadable graphic in the end.</p>
 <p><img src="Algo performance F1.png"></p>
 
 </div>
@@ -11950,6 +11995,15 @@ I expected some kind of e-curve approximation getting either slowly better or sl
 <div class="text_cell_render border-box-sizing rendered_html">
 <p>First we note that the performance is much less random with the original features. Second, we can see that the peak performance is better than the peak performance with the random additional features, nearly 0.6 F1 score. Third, we can see that the two favorites both outperform with PCA and not with K-Best; which is the opposite result than above. Indeed, K-Best seems to work best on the right side of the scale: At the point where it actually does <em>not select</em> anymore.</p>
 <p>Well - this exercise was nice, but in the beginning i did this to see if there is one calculated feature that can actually improve the original score.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered">
+<div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
 <h3 id="Choosing-additional-features">Choosing additional features<a class="anchor-link" href="#Choosing-additional-features">&#182;</a></h3><p>I executed a little code:</p>
 
 <pre><code>kb = SelectKBest(k=5)
@@ -11960,13 +12014,12 @@ if choice:
 
 </code></pre>
 <p>And indeed, there were some important features; and they are exclusively multiplication features.</p>
-<ul>
-<li>deferred_income <em>multiplied with</em> exercised_stock_options</li>
-<li>deferred_income <em>multiplied with</em> total_stock_value</li>
-<li>exercised_stock_options <em>multiplied with</em> deferral_payments</li>
-<li>exercised_stock_options <em>multiplied with</em> deferred_income</li>
-<li>total_stock_value <em>multiplied with</em> deferred_income</li>
-</ul>
+
+<pre><code>deferred_income * exercised_stock_options
+deferred_income * total_stock_value
+exercised_stock_options * deferral_payments
+exercised_stock_options * deferred_income
+total_stock_value * deferred_income</code></pre>
 <p>Two of those five chosen features are actually double! This might be in parts the explanation for the erratic behavior of the algorithms - if they get "additional" features that really don't contain more information, it might harm the performance.</p>
 <p>I continue by adding those three features to the original feature vector and see how the algorithms behave.
 As AdaBoost and Random Forest didn't compare well to the other two, they are excluded from now on for speed and readability.</p>
@@ -11991,15 +12044,44 @@ As AdaBoost and Random Forest didn't compare well to the other two, they are exc
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h2 id="5.-final-validation">5. final validation<a class="anchor-link" href="#5.-final-validation">&#182;</a></h2><p>Having gained the experience now, i was re-fitting the same four algorithms on the original data again, now with the best parameters and features available. Also, i found out that i forgot to set "class_weight" to balanced in the first try. Finally having learned now that i can set the base estimator of AdaBoost to something i like, i did use the most successful variant of a Decision Tree in Adaboost.
-Then i put the StratifiedShuffleSplit to 1000 for the GridSearch; so that it was exactly like in the tester code and retuned  all estimators. The validation was done each time with the Udacity tester code and recorded in a table. 
-Marked in red were all algorithms that didn't fulfill the Udacity requirements of at least 0.3 Precision and Recall; marked in green are the top three results in each column.</p>
-<p>Nearly as afterthought, i was letting the other algorithms use the DecisionTree choice of features, just to see if they would behave better or not.</p>
-<p><img src="Final performance table.png"></p>
-<p>This was like shopping. (Almost) the first try was the best.</p>
-<p>The winner is: A support vector classifier, <em>without</em> PCA upfront, but with 'balanced' class weight and sigmoid kernel.</p>
-<p>The three additional features chosen from the 1200 random features indeed improved accuracy, precision and recall score each by a little less 0.01 - in two of the three values the improvement is even not visible due to rounding errors - if that was worth the calculation and work time, I don't know. If it was for a real to make a new case, certainly every percentage point would be appreciated.</p>
-<p>As i didn't optimize for the accuracy but for the F1 score, my top result for it is 0.77: that means 0.10 less than the benchmark for this exercise. However, i am quite happy with a recall rate of 0.79 and a precision of 0.34 - those results are more important than the pure accuracy, given that this work could point it's finger at certain persons.</p>
+<h2 id="5.-final-validation">5. final validation<a class="anchor-link" href="#5.-final-validation">&#182;</a></h2><p>Having gained the experience now, i was re-fitting the same four algorithms on the original data again, now with the best parameters and features available. Also, i found out that i forgot to set "class_weight" to balanced in the first try. Finally having learned now that i can set the base estimator of AdaBoost to something i like, i did use the most successful variant of a Decision Tree in Adaboost. Then i put the StratifiedShuffleSplit to 1000 for the GridSearch; so that it was exactly like in the udacity tester code and retuned all estimators.</p>
+<p><strong>why this extra-validation?</strong>
+This is a necessary step: Without the validation from the Udacity tester code, i can never be sure that i did not overfit my estimator to the wrong metric. I was choosing features and training the algorithms all the way long with a simple F1 scorer and a simplified (compared to the Udacity) stratifiedShuffleSplit, in order to save time. It can of course happen that i was not finding the best parameters or i was overfitting somewhere. So this step here is necessary to confirm that what i did is good the way Udacity is measuring.</p>
+<p>The validation was done each time with the Udacity tester code and recorded in a table. Marked in red were all algorithms that didn't fulfill the Udacity requirements of at least 0.3 Precision and Recall; marked in green are the top three results in each column.</p>
+<p>Nearly as afterthought, i was letting the other algorithms use the DecisionTree choice of features, just to see if they would behave better or not.
+<img src="Final performance table.png"></p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered">
+<div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Now, having the confirmation that in each case the SVC behaves best, i was refitting it on the best feature vector i could make. 
+This is the feature list:</p>
+
+<pre><code>['poi',
+ 'salary', 'director_fees', 'bonus', 'expenses', 
+ 'loan_advances', 'long_term_incentive', 'other',
+ 'total_payments', 'deferral_payments', 'deferred_income',
+ 'total_stock_value', 'restricted_stock', 'restricted_stock_deferred',
+ 'from_messages', 'from_poi_to_this_person', 'from_this_person_to_poi',
+
+ 'deferred_income_x_exercised_stock_options', 
+ 'deferred_income_x_total_stock_value',          
+ 'exercised_stock_options_x_deferral_payments']</code></pre>
+<p>Those last three features are the ones derived from the experiment with the 1200 artificial features.
+On this list, with an SVC <em>without PCA</em>, using the sigmoid function, balanced class weight, C=600, gamma = 0.01, i achieved with the Udacity tester code:</p>
+<ul>
+<li>Accuracy: 0.77487       </li>
+<li>Precision: 0.34851      </li>
+<li>Recall: 0.79200 </li>
+<li>F1: 0.48403</li>
+<li>F2: 0.63133</li>
+</ul>
+<p>As i didn't optimize for the accuracy but for the F1 score, my top result for it is 0.77: that means 0.10 less than the benchmark for this exercise. However, i am quite happy with a recall rate of 0.79 and a precision of 0.35 - those results are more important than the pure accuracy, given that this work could point it's finger at certain persons.</p>
 
 </div>
 </div>
@@ -12010,9 +12092,8 @@ Marked in red were all algorithms that didn't fulfill the Udacity requirements o
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
 <h2 id="6.-Two-evaluation-metrics">6. Two evaluation metrics<a class="anchor-link" href="#6.-Two-evaluation-metrics">&#182;</a></h2><p>Personally i think that none of this is going to be usable for a new case: As it stands, the precision of 0.34 indicates that my algorithm points out two non-POI's for every POI marked in the original data. A deep investigation would be necessary now to see if those two extra are a really great result of my work and they need to be investigated by the justice system, or if the data is just not good enough and i point my finger to a lot of innocents.</p>
-<p>Similarly, a recall rate of 79% means that i let a fifth of the real-world POI's slip. At least the recall rate should be far beyond 90% before doing any serious justice action on this. However, i tried to train my algorithm to that metric first, with the result that both accuracy and precision were going so far down that it wasn't usable.</p>
-<p>(<a href="https://en.wikipedia.org/wiki/Precision_and_recall">Wikipedia has a nice explanation</a>)
-Those two metrics show that it is not so easy to identify fraud from email and financial data only. It would be interesting to see how well a neural net performs here - whereas, it is somewhere between difficult and impossible to find the reasons for a decision in the net; which is of prime importance in the justice. An SVC with a sigmoid decision function is as close as it gets to a Neural Net without actually setting one up.</p>
+<p>Similarly, a recall rate of 79% means that my algorithm finds 79% of the POI's in the dataset. Having 18 POI's means it finds 14, and 4 get away. At least the recall rate should be beyond 90% before doing any serious justice action on this. However, i tried to train my algorithm to that metric first, with the result that both accuracy and precision were going so far down that it wasn't usable.</p>
+<p>(Wikipedia has a nice explanation) Those two metrics show that it is not so easy to identify fraud from email and financial data only. It would be interesting to see how well a neural net performs here - whereas, it is somewhere between difficult and impossible to find the reasons for a decision in the net; which is of prime importance in the justice. An SVC with a sigmoid decision function is as close as it gets to a Neural Net without actually setting one up.</p>
 
 </div>
 </div>
@@ -12022,18 +12103,18 @@ Those two metrics show that it is not so easy to identify fraud from email and f
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h2 id="Conclusion">Conclusion<a class="anchor-link" href="#Conclusion">&#182;</a></h2><p>Having tried and tested lots values in the hyperparameter space, having played around a lot with the features, this project showed me a few interesting things:</p>
+<h2 id="Conclusion:">Conclusion:<a class="anchor-link" href="#Conclusion:">&#182;</a></h2><p>Having tried and tested lots values in the hyperparameter space, having played around a lot with the features, this project showed me a few interesting things:</p>
 <ul>
-<li>I can only increase recall and precision at the same time, when i find a much better feature in the original bulk of the e-mails. This is a work i will not do in the frame of this project. </li>
+<li>I can only increase recall and precision at the same time, when i find a much better feature in the original bulk of the e-mails. This is a work i will not do in the frame of this project.</li>
 <li>I just didn't want to stop as i had the feeling that it could be yet a little bit better. And then some.</li>
 <li>Behind each of the sklearn "algo's" there is a lot of things yet to learn - using the decision tree for feature selection was interesting, also using K-Best, or observing the behavior of PCA generated features. Especially PCA could be quite powerful if one feels the need to reduce a big feature space. Here, with 20 features, it was not necessary.</li>
 <li>The coding for this project was... interesting. As i had to go forward and backward in the code, constantly changing parts of it and in the go deleting traces of before, the poi_id.py now contains just the traces of the best approach. There is poi_id_mass_test that contains a lot more traces that stem in part from the data investigation and in part from the search for good additional features. Most of the code there is commented, because i was activating or deactivating parts of it as needed.</li>
-<li>The one thing i did not do was writing a scorer of my own. Fitting to the question of Udacity, i would make a scorer that has a big penalty function for Precision or Recall below 0.3; and as soon as it is above 0.3, an extra bonus for each additional point of accuracy. That could actually be interesting, having a 5 minutes video during the course about how to do that. </li>
+<li>The one thing i did not do was writing a scorer of my own. Fitting to the question of Udacity, i would make a scorer that has a big penalty function for Precision or Recall below 0.3; and as soon as it is above 0.3, an extra bonus for each additional point of accuracy. That could actually be interesting, having a 5 minutes video during the course about how to do that.</li>
 </ul>
 <p>It was definitely interesting and leaves me questioning two things:</p>
 <ul>
 <li>Natural data is dirty. How can we do things like palantir's predictive policing or like COMPAS (used for deciding prison sentences), without putting lots of innocents in risk of being mis-estimated?</li>
-<li>And more personally: how i would fare if attacking the one or other Kaggle dataset - I will see. </li>
+<li>And more personally: how i would fare if attacking the one or other Kaggle dataset - I will see.</li>
 </ul>
 
 </div>
